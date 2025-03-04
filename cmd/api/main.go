@@ -76,7 +76,7 @@ func main() {
   }
 
   // Start the HTTP server.
-  logger.Info("starting server", "addr", src.Addr, "env", cfg.env)
+  logger.Info("starting server", "addr", srv.Addr, "env", cfg.env)
 
   err := srv.ListenAndServe()
   logger.Error(err.Error())
