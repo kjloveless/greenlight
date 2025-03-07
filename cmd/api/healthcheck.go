@@ -5,19 +5,19 @@ import (
 )
 
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
-  // Create a map which holds the information that we want to send in the
-  // response.
-  data := map[string]string{
+  // Declare an envelope map containing the data for the response. Notice that
+  // the way we've constructed this means the environment and version data will
+  // now be nested under a system_info key in the JSON response.
+  env := envelope{
     "status":       "available",
-    "environment":  app.config.env,
-    "version":      version,
+    "system_info": map[string]string{
+      "environment":  app.config.env,
+      "version":      version,
+    },
   }
   
-  err := app.writeJSON(w, http.StatusOK, data, nil)
+  err := app.writeJSON(w, http.StatusOK, env, nil)
   if err != nil {
-    app.logger.Error(err.Error())
-    http.Error(w, 
-      "the server encountered a problem and could not process your request",
-      http.StatusInternalServerError)
+    app.serverErrorResponse(w, r, err)
   }
 }

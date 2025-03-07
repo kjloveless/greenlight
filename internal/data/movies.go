@@ -11,7 +11,7 @@ type Movie struct {
   CreatedAt time.Time `json:"-"`                // Timestamp for when the movie is added to our database
   Title     string    `json:"title"`            // Movie title
   Year      int32     `json:"year,omitzero"`    // Movie release year
-  Runtime   int32     `json:"runtime,omitzero"` // Movie runtime (in minutes)
+  Runtime   Runtime   `json:"runtime,omitzero"` // Movie runtime (in minutes)
   Genres    []string  `json:"genres,omitzero"`  // Slice of genres for the movie (romance, comedy, etc)
   Version   int32     `json:"version"`          // The version number starts at 1 and will be incremented
                                                 //  each time the movie information is updated.
