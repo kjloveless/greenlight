@@ -10,6 +10,8 @@ import (
   "os"
   "time"
 
+  "github.com/kjloveless/greenlight/internal/data"
+
   // Import the pq driver so that it can register itself with the database/sql
   // package. Note that we alias this import to the blank identifier, to stop
   // the Go compilter complaining that the package isn't being used.
@@ -45,6 +47,7 @@ type config struct {
 type application struct {
   config  config
   logger  *slog.Logger
+  models  data.Models
 }
 
 func main() {
@@ -93,6 +96,7 @@ func main() {
   app := &application{
     config: cfg,
     logger: logger,
+    models: data.NewModels(db),
   }
 
   // Declare a HTTP server which listens on the port provided in the config

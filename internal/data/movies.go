@@ -1,9 +1,12 @@
 package data
 
 import (
+  "database/sql"
   "time"
 
   "github.com/kjloveless/greenlight/internal/validator"
+
+  "github.com/lib/pq"
 )
 
 // Annotate the Movie struct with struct tags to control how the keys appear in
@@ -17,6 +20,11 @@ type Movie struct {
   Genres    []string  `json:"genres,omitzero"`  // Slice of genres for the movie (romance, comedy, etc)
   Version   int32     `json:"version"`          // The version number starts at 1 and will be incremented
                                                 //  each time the movie information is updated.
+}
+
+// Define a MovieModel struct type which wraps a sql.DB connection pool.
+type MovieModel struct {
+  DB *sql.DB
 }
 
 func ValidateMovie(v *validator.Validator, movie *Movie) {
@@ -34,4 +42,36 @@ func ValidateMovie(v *validator.Validator, movie *Movie) {
   v.Check(len(movie.Genres) >= 1, "genres", "must contain at least 1 genre")
   v.Check(len(movie.Genres) <= 5, "genres", "must not contain more than 5 genres")
   v.Check(validator.Unique(movie.Genres), "genres", "must not contain duplicate values")
+}
+
+func (m MovieModel) Insert(movie *Movie) error {
+  // Define the SQL query for inserting a new record in the movies table and
+  // returning the system-generated data.
+  query := `
+    INSERT INTO movies (title, year, runtime, genres)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id, created_at, version`
+
+  // Create an args slice containing the values for the placeholder parameters
+  // from the movie struct. Declaring this slice immediately next to our SQL
+  // query helps to make it nice and clear *what values are being used where*
+  // in the query.
+  args := []any{ movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres) }
+
+  // Use the QueryRow() method to execute the SQL query on our connection pool,
+  // passing in the args slice as a variadic parameter and scanning the
+  // system-generated id, created_at, and version values into the movie struct.
+  return m.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
+}
+
+func (m MovieModel) Get(id int64) (*Movie, error) {
+  return nil, nil
+}
+
+func (m MovieModel) Update(movie *Movie) error {
+  return nil
+}
+
+func (m MovieModel) Delete(id int64) error {
+  return nil
 }
