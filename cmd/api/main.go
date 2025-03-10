@@ -64,7 +64,7 @@ func main() {
   // discussed above?
   flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
   flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
-  flag.DurationVar(&cfg.db.macIdleTime, "db-max-idle-time", 15*time.Minute,
+  flag.DurationVar(&cfg.db.maxIdleTime, "db-max-idle-time", 15*time.Minute,
     "PostgreSQL max connection idle time")
   flag.Parse()
 
@@ -137,7 +137,7 @@ func openDB(cfg config) (*sql.DB, error) {
   // Set the maximum idle timeout for connections in the pool. Passing a
   // duration less than or equal to 0 will mean that connections are not closed
   // due to their idle time.
-  db.SetConnMaxIdleTimeout(cfg.db.maxIdleTime)
+  db.SetConnMaxIdleTime(cfg.db.maxIdleTime)
 
 
   // Create a context with a 5-second timeout deadline.
