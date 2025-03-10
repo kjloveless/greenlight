@@ -114,3 +114,43 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
     app.serverErrorResponse(w, r, err)
   }
 }
+
+func (app *application) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
+  // Extract the movie ID from the URL.
+  id, err := app.readIDParam(r)
+  if err != nil {
+    app.notFoundResponse(w, r)
+    return
+  }
+
+  // Fetch the existing movie record from the database, sending a 404 Not Found
+  // response to the client if we couldn't find a matching record.
+  movie, err := app.models.Movies.Get(id)
+  if err != nil {
+    switch {
+    case errors.Is(err, data.ErrRecordNotFound):
+      app.notFoundResponse(w, r)
+    default:
+      app.serverErrorResponse(w, r, err)
+    }
+    return
+  }
+
+  // Declare an input struct to hold the expected data from the client.
+  var input struct {
+    Title   string      `json:"title"`
+    Year    int32       `json:"year"`
+    Runtime data.Runtime  `json:"runtime"`
+    Genres  []string      `json:"genres"`
+  }
+
+  // Read the JSON request body data into the input struct.
+  err := app.readJSON(w, r, &input)
+  if err != nil {
+    app.badRequestResponse(w, r, err)
+    return
+  }
+
+  // Copy the values from the request body to the appropriate fields of the
+  // movie record.
+}
