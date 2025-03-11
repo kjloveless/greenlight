@@ -135,7 +135,7 @@ func (m MovieModel) Update(movie *Movie) error {
   // Use the QueryRow() method to execute the query, passing in the args slice
   // as a variadic parameter and scanning the new version value into the movie
   // struct.
-  return m.DB.QueryRow(query, args...).Scan(&movie.version)
+  return m.DB.QueryRow(query, args...).Scan(&movie.Version)
 }
 
 func (m MovieModel) Delete(id int64) error {
