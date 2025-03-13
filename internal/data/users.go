@@ -63,7 +63,7 @@ func (p *password) Set(plaintextPassword string) error {
 // the hashed password stored in the struct, returning true if it matches and
 // false otherwise.
 func (p *password) Matches(plaintextPassword string) (bool, error) {
-  err := bcrypt,CompareHashAndPassword(p.hash, []byte(plaintextPassword))
+  err := bcrypt.CompareHashAndPassword(p.hash, []byte(plaintextPassword))
   if err != nil {
     switch {
     case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
