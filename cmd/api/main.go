@@ -9,6 +9,9 @@ import (
   "time"
 
   "github.com/kjloveless/greenlight/internal/data"
+  "github.com/kjloveless/greenlight/internal/mailer"
+
+  "github.com/joho/godotenv"
 
   // Import the pq driver so that it can register itself with the database/sql
   // package. Note that we alias this import to the blank identifier, to stop
@@ -44,6 +47,13 @@ type config struct {
     burst   int
     enabled bool
   }
+  smtp struct {
+    host      string
+    port      int
+    username  string
+    password  string
+    sender    string
+  }
 }
 
 // Define an application struct to hold the dependencies for our HTTP handlers,
@@ -54,9 +64,22 @@ type application struct {
   config  config
   logger  *slog.Logger
   models  data.Models
+  mailer  *mailer.Mailer
 }
 
 func main() {
+  // Initialize a new structured logger which writes log entries to the
+  // standard out stream.
+  logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+ 
+  err := godotenv.Load(".env")
+  if err != nil {
+    logger.Error(err.Error())
+    os.Exit(1)
+  }
+
+  smtp_username := os.Getenv("SMTP_USERNAME")
+  smtp_password := os.Getenv("SMTP_PASSWORD")
   // Declare an instance of the config struct.
   var cfg config
 
@@ -82,11 +105,18 @@ func main() {
   flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
   flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "enable rate limiter")
 
-  flag.Parse()
+  // Read the SMTP server configuration settings into the config struct, using
+  // the Mailtrap settings as the default values. IMPORTANT: If you're
+  // following along, make sure to replace the default values for smtp-username
+  // and smtp-password with your own Mailtrap credentials.
+  flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
+  flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
+  flag.StringVar(&cfg.smtp.username, "smtp-username", smtp_username, "SMTP username")
+  flag.StringVar(&cfg.smtp.password, "smtp-password", smtp_password, "SMTP password")
+  flag.StringVar(&cfg.smtp.sender, "smtp-sender", 
+    "Greenlight <no-reply@greenlight.loveless.dev>", "SMTP sender")
 
-  // Initialize a new structured logger which writes log entries to the
-  // standard out stream.
-  logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+  flag.Parse()
 
   // Call the openDB() helper function (see below) to create the connection
   // pool, passing in the config struct. If this returns an error, we log it
@@ -104,12 +134,22 @@ func main() {
   // established.
   logger.Info("database connection pool established")
 
+  // Initialize a new Mailer instance using the settings from the command line
+  // flags.
+  mailer, err := mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username,
+    cfg.smtp.password, cfg.smtp.sender)
+  if err != nil {
+    logger.Error(err.Error())
+    os.Exit(1)
+  }
+
   // Declare an instance of the application struct, containing the config
   // struct and the logger.
   app := &application{
     config: cfg,
     logger: logger,
     models: data.NewModels(db),
+    mailer: mailer,
   }
 
   err = app.serve()
