@@ -6,6 +6,7 @@ import (
   "flag"
   "log/slog"
   "os"
+  "sync"
   "time"
 
   "github.com/kjloveless/greenlight/internal/data"
@@ -60,11 +61,16 @@ type config struct {
 // helpers, and middleware. At the moment this only contains a copy of the
 // config struct and a logger, but it will grow to include a lot more as our
 // build progresses.
+// Include a sync.WaitGroup in the application struct. The zero-value for a
+// sync.WaitGroup type is a valid useable, sync.WaitGroup with a 'counter'
+// value of 0, so we don't need to do anything else to initialize it before we
+// can use it.
 type application struct {
   config  config
   logger  *slog.Logger
   models  data.Models
   mailer  *mailer.Mailer
+  wg      sync.WaitGroup
 }
 
 func main() {
