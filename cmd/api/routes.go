@@ -1,6 +1,7 @@
 package main
 
 import (
+  "expvar"
   "net/http"
 
   "github.com/julienschmidt/httprouter"
@@ -21,6 +22,9 @@ func (app *application) routes() http.Handler {
   router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
   
   router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
+
+  // Register a new GET /debug/vars endpoint pointing to the expvar handler.
+  router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
   // Register the relevant methods, URL patterns and handler functions for our
   // endpoints using the HandlerFunc() method. Note that http.MethodGet and
@@ -54,5 +58,5 @@ func (app *application) routes() http.Handler {
     app.createAuthenticationTokenHandler)
 
   // Return the httprouter instance.
-  return app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router))))
+  return app.metrics(app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router)))))
 }
