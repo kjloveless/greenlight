@@ -15,6 +15,7 @@ import (
 
 	"github.com/kjloveless/greenlight/internal/data"
 	"github.com/kjloveless/greenlight/internal/mailer"
+  "github.com/kjloveless/greenlight/internal/vcs"
 
 	"github.com/joho/godotenv"
 
@@ -24,10 +25,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// Declare a string containing the application version number. Later in the
-// book we'll generate this automatically at build time, but for now we'll just
-// store the version number as a hard-coded global constant.
-const version = "1.0.0"
+// Make version a variable (rather than a constant) and set its value to
+// vcs.Version().
+var (
+  version = vcs.Version()
+)
 
 // Define a config struct to hold all the configuration settings for our
 // application. For now, the only configuration settings will be the network
