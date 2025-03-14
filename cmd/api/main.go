@@ -85,6 +85,7 @@ func main() {
   // standard out stream.
   logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
  
+  // Load .env file to read in Mailtrap credentials
   err := godotenv.Load(".env")
   if err != nil {
     logger.Error(err.Error())
@@ -93,6 +94,7 @@ func main() {
 
   smtp_username := os.Getenv("SMTP_USERNAME")
   smtp_password := os.Getenv("SMTP_PASSWORD")
+
   // Declare an instance of the config struct.
   var cfg config
 
@@ -101,9 +103,9 @@ func main() {
   // "development" if no corresponding flags are provided.
   flag.IntVar(&cfg.port, "port", 4000, "API server port")
   flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-  // Read the DSN value from the db-dsn command-line flag into the config
-  // struct. We default to using our development DSN if no flag is provided.
-  flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
+  // Use the empty string "" as the default value for the db-dsn command-line
+  // flag, rather than os.Getenv("GREENLIGHT_DB_DSN") like we were previously.
+  flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
   // Read the connection pool settings from command-line flags into the config
   // struct. Notice that the default values we're using are the ones we
   // discussed above?
