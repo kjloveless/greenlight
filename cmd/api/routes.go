@@ -19,24 +19,29 @@ func (app *application) routes() http.Handler {
   // and set it as the custom error handler for 405 Method Not Allowed
   // responses.
   router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
+  
+  router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 
   // Register the relevant methods, URL patterns and handler functions for our
   // endpoints using the HandlerFunc() method. Note that http.MethodGet and
   // http.MethodPost are constants which equate to the strings "GET" and "POST"
   // respectively.
   router.HandlerFunc(http.MethodGet, "/v1/movies", 
-    app.requireActivatedUser(app.listMoviesHandler))
-  router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
+    app.requirePermission("movies:read", app.listMoviesHandler))
+
   router.HandlerFunc(http.MethodPost, "/v1/movies", 
-    app.requireActivatedUser(app.createMovieHandler))
+    app.requirePermission("movies:write", app.createMovieHandler))
+
   router.HandlerFunc(http.MethodGet, "/v1/movies/:id", 
-    app.requireActivatedUser(app.showMovieHandler))
+    app.requirePermission("movies:read", app.showMovieHandler))
+
   // Add the route for the PATCH /v1/movies/:id endpoint.
   router.HandlerFunc(http.MethodPatch, "/v1/movies/:id", 
-    app.requireActivatedUser(app.updateMovieHandler))
+    app.requirePermission("movies:write", app.updateMovieHandler))
+
   // Add the route for the DELETE /v1/movies/:id endpoint
   router.HandlerFunc(http.MethodDelete, "/v1/movies/:id", 
-    app.requireActivatedUser(app.deleteMovieHandler))
+    app.requirePermission("movies:write", app.deleteMovieHandler))
 
   // Add the route for the POST /v1/users endpoint.
   router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
