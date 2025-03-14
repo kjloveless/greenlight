@@ -1,10 +1,10 @@
 package main
 
 import (
-  "context"
-  "net/http"
+	"context"
+	"net/http"
 
-  "github.com/kjloveless/greenlight/internal/data"
+	"github.com/kjloveless/greenlight/internal/data"
 )
 
 // Define a custom contextKey type, with the underlying type string.
@@ -18,11 +18,11 @@ const userContextKey = contextKey("user")
 // The contextSetUser() method returns a new copy of the request with the
 // provided User struct added to the context. Note that we use our
 // useContextKey constant as the key.
-func (app *application) contextSetUser(r *http.Request, 
-  user *data.User,
+func (app *application) contextSetUser(r *http.Request,
+	user *data.User,
 ) *http.Request {
-  ctx := context.WithValue(r.Context(), userContextKey, user)
-  return r.WithContext(ctx)
+	ctx := context.WithValue(r.Context(), userContextKey, user)
+	return r.WithContext(ctx)
 }
 
 // The contextGetUser() retrieves the User struct from the request context. The
@@ -31,10 +31,10 @@ func (app *application) contextSetUser(r *http.Request,
 // an 'unexpected' error. As we discussed earlier in the book, it's OK to panic
 // in those circumstances
 func (app *application) contextGetUser(r *http.Request) *data.User {
-  user, ok := r.Context().Value(userContextKey).(*data.User)
-  if !ok {
-    panic("missing user value in request context")
-  }
+	user, ok := r.Context().Value(userContextKey).(*data.User)
+	if !ok {
+		panic("missing user value in request context")
+	}
 
-  return user
+	return user
 }

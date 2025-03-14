@@ -1,17 +1,17 @@
 package mailer
 
 import (
-  "bytes"
-  "embed"
-  "time"
+	"bytes"
+	"embed"
+	"time"
 
-  "github.com/wneessen/go-mail"
+	"github.com/wneessen/go-mail"
 
-  // Import the html/template and text/template packages. Because these share
-  // the same package name ("template") we need to disambiguate them and alias
-  // them to ht and tt respectively.
-  ht "html/template"
-  tt "text/template"
+	// Import the html/template and text/template packages. Because these share
+	// the same package name ("template") we need to disambiguate them and alias
+	// them to ht and tt respectively.
+	ht "html/template"
+	tt "text/template"
 )
 
 // Below we declare a new variable with the type embed.FS (embedded file
@@ -28,105 +28,105 @@ var templateFS embed.FS
 // name and address you want the email to be from, such as "Alice Smith
 // <alice@example.com>").
 type Mailer struct {
-  client  *mail.Client
-  sender  string
+	client *mail.Client
+	sender string
 }
 
 func New(
-  host string, 
-  port int, 
-  username, password, sender string,
+	host string,
+	port int,
+	username, password, sender string,
 ) (*Mailer, error) {
-  // Initialize a new mail.Dialer instance with the given SMTP server settings.
-  // We also configure this to use a 5-second timeout whenever we send an
-  // email. I've split the NewClient arguments over multiple lines for
-  // readability, but you can make this a single line if you prefer.
-  client, err := mail.NewClient(
-    host,
-    mail.WithSMTPAuth(mail.SMTPAuthLogin),
-    mail.WithPort(port),
-    mail.WithUsername(username),
-    mail.WithPassword(password),
-    mail.WithTimeout(5*time.Second),
-  )
-  if err != nil {
-    return nil, err
-  }
+	// Initialize a new mail.Dialer instance with the given SMTP server settings.
+	// We also configure this to use a 5-second timeout whenever we send an
+	// email. I've split the NewClient arguments over multiple lines for
+	// readability, but you can make this a single line if you prefer.
+	client, err := mail.NewClient(
+		host,
+		mail.WithSMTPAuth(mail.SMTPAuthLogin),
+		mail.WithPort(port),
+		mail.WithUsername(username),
+		mail.WithPassword(password),
+		mail.WithTimeout(5*time.Second),
+	)
+	if err != nil {
+		return nil, err
+	}
 
-  // Return a Mailer instance containing the client and sender information.
-  mailer := &Mailer{
-    client: client,
-    sender: sender,
-  }
+	// Return a Mailer instance containing the client and sender information.
+	mailer := &Mailer{
+		client: client,
+		sender: sender,
+	}
 
-  return mailer, nil
+	return mailer, nil
 }
 
 // Define a Send() method on the Mailer type. This takes the recipient email
 // addres as the first parameter, the name of the file containing the
 // templates, and any dynamic data for the templates as an any parameter.
 func (m *Mailer) Send(recipient string, templateFile string, data any) error {
-  // Use the ParseFS() method from text/template to parse the required template
-  // file from the embedded file system.
-  textTmpl, err := tt.New("").ParseFS(templateFS, "templates/"+templateFile)
-  if err != nil {
-    return err
-  }
+	// Use the ParseFS() method from text/template to parse the required template
+	// file from the embedded file system.
+	textTmpl, err := tt.New("").ParseFS(templateFS, "templates/"+templateFile)
+	if err != nil {
+		return err
+	}
 
-  // Execute the named template "subject", passing in the dynamic data and
-  // storing the result in a bytes.Buffer variable.
-  subject := new(bytes.Buffer)
-  err = textTmpl.ExecuteTemplate(subject, "subject", data)
-  if err != nil {
-    return err
-  }
+	// Execute the named template "subject", passing in the dynamic data and
+	// storing the result in a bytes.Buffer variable.
+	subject := new(bytes.Buffer)
+	err = textTmpl.ExecuteTemplate(subject, "subject", data)
+	if err != nil {
+		return err
+	}
 
-  // Follow the same pattern to execute the "plainBody" template and store the
-  // result in the plainBody variable.
-  plainBody := new(bytes.Buffer)
-  err = textTmpl.ExecuteTemplate(plainBody, "plainBody", data)
-  if err != nil {
-    return err
-  }
+	// Follow the same pattern to execute the "plainBody" template and store the
+	// result in the plainBody variable.
+	plainBody := new(bytes.Buffer)
+	err = textTmpl.ExecuteTemplate(plainBody, "plainBody", data)
+	if err != nil {
+		return err
+	}
 
-  // Use the ParseFS() method from the html/template this time to parse the
-  // required template file from the embedded file system.
-  htmlTmpl, err := ht.New("").ParseFS(templateFS, "templates/"+templateFile)
-  if err != nil {
-    return err
-  }
+	// Use the ParseFS() method from the html/template this time to parse the
+	// required template file from the embedded file system.
+	htmlTmpl, err := ht.New("").ParseFS(templateFS, "templates/"+templateFile)
+	if err != nil {
+		return err
+	}
 
-  // And execute the "htmlBody" template and store the result in the htmlBody
-  // variable.
-  htmlBody := new(bytes.Buffer)
-  err = htmlTmpl.ExecuteTemplate(htmlBody, "htmlBody", data)
-  if err != nil {
-    return err
-  }
+	// And execute the "htmlBody" template and store the result in the htmlBody
+	// variable.
+	htmlBody := new(bytes.Buffer)
+	err = htmlTmpl.ExecuteTemplate(htmlBody, "htmlBody", data)
+	if err != nil {
+		return err
+	}
 
-  // Use the mail.NewMsg() function to initialize a new mail.Msg instance.
-  // Then we use the To(), From(), and Subject() methods to set the email
-  // recipient, sender, and subject headers, the SetBodyString() method to set
-  // the plain-text body, and the AddAlternativeString() method to set the HTML
-  // body.
-  msg := mail.NewMsg()
+	// Use the mail.NewMsg() function to initialize a new mail.Msg instance.
+	// Then we use the To(), From(), and Subject() methods to set the email
+	// recipient, sender, and subject headers, the SetBodyString() method to set
+	// the plain-text body, and the AddAlternativeString() method to set the HTML
+	// body.
+	msg := mail.NewMsg()
 
-  err = msg.To(recipient)
-  if err != nil {
-    return err
-  }
+	err = msg.To(recipient)
+	if err != nil {
+		return err
+	}
 
-  err = msg.From(m.sender)
-  if err != nil {
-    return err
-  }
+	err = msg.From(m.sender)
+	if err != nil {
+		return err
+	}
 
-  msg.Subject(subject.String())
-  msg.SetBodyString(mail.TypeTextPlain, plainBody.String())
-  msg.AddAlternativeString(mail.TypeTextHTML, htmlBody.String())
+	msg.Subject(subject.String())
+	msg.SetBodyString(mail.TypeTextPlain, plainBody.String())
+	msg.AddAlternativeString(mail.TypeTextHTML, htmlBody.String())
 
-  // Call the DialAndSend() method on the dialer, passing in the message to
-  // send. This opens a connection to the SMTP server, sends the message, then
-  // closes the connection.
-  return m.client.DialAndSend(msg)
+	// Call the DialAndSend() method on the dialer, passing in the message to
+	// send. This opens a connection to the SMTP server, sends the message, then
+	// closes the connection.
+	return m.client.DialAndSend(msg)
 }
